@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tgwsproxy-windows.github.io/sitemap.xml
