@@ -1,1352 +1,520 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#000000">
-
-<!-- ── SEO ───────────────────────────────────────────────────── -->
-<title>TgWsProxy — Telegram WebSocket-прокси. Свобода соединения. Без границ.</title>
-<meta name="description" content="TgWsProxy — распределённая сеть Telegram WebSocket-прокси: обход DPI-блокировок, пинг 30–60 мс, аптайм 99,98%, MTProto 2.0 и WSS. Подключение в один клик, ноль логов, 26 узлов.">
-<meta name="robots" content="index, follow">
-<meta name="author" content="TgWsProxy">
-<link rel="canonical" href="https://tgwsproxy-windows.github.io/">
-
-<!-- ── Open Graph / Twitter ──────────────────────────────────── -->
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="TgWsProxy">
-<meta property="og:locale" content="ru_RU">
-<meta property="og:url" content="https://tgwsproxy-windows.github.io/">
-<meta property="og:title" content="TgWsProxy — Свобода соединения. Без границ.">
-<meta property="og:description" content="Распределённая сеть WebSocket-прокси для Telegram. Обход DPI, пинг 30–60 мс, ноль логов, подключение в один клик.">
-<meta property="og:image" content="https://tgwsproxy-windows.github.io/og.svg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="TgWsProxy — Свобода соединения. Без границ.">
-<meta name="twitter:description" content="Telegram WebSocket-прокси: обход блокировок, низкий пинг, приватность без логов.">
-<meta name="twitter:image" content="https://tgwsproxy-windows.github.io/og.svg">
-
-<!-- ── Иконка (SVG в data-URI: без внешних файлов) ───────────── -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cpath d='M4 16h7l3-9 4 18 3-9h7' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='square'/%3E%3C/svg%3E">
-
-<!-- ── Шрифты ────────────────────────────────────────────────── -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
-
-<!-- ── Структурированные данные ──────────────────────────────── -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Service",
-  "name": "TgWsProxy",
-  "serviceType": "Telegram WebSocket proxy",
-  "description": "Распределённая сеть WebSocket-прокси для Telegram: обход DPI-блокировок, низкий пинг, отсутствие логов.",
-  "areaServed": "Worldwide",
-  "provider": { "@type": "Organization", "name": "TgWsProxy", "url": "https://tgwsproxy-windows.github.io/" }
-}
-</script>
-
-<style>
-/* ============================================================
-   TgWsProxy — монохромная визуальная система
-   ============================================================ */
-
-/* ── 0. Сброс и токены ─────────────────────────────────────── */
-*,*::before,*::after{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:72px;overflow-x:clip}
-@supports not (overflow:clip){html{overflow-x:hidden}}
-
-:root{
-  --bg:#000000; --bg-1:#0a0a0a; --bg-2:#111111;
-  --g1:#1a1a1a; --g2:#2d2d2d; --g3:#4d4d4d; --g4:#808080; --g5:#b3b3b3;
-  --fg:#ffffff; --fg2:#e6e6e6; --fg3:#a0a0a0;
-  --on:#00ffcc;
-  --line:rgba(255,255,255,.10);
-  --line-2:rgba(255,255,255,.22);
-  --line-3:rgba(255,255,255,.34);
-  --pad:20px;
-  --hdr:58px;
-  --r:2px;
-  --fd:"Space Grotesk","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --fb:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --fm:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-}
-
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--fg2);
-  font:400 16px/1.5 var(--fb);
-  letter-spacing:-.006em;
-  overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
-}
-
-img,svg,canvas{display:block;max-width:100%}
-a{color:inherit;text-decoration:none}
-button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-h1,h2,h3,h4{font-family:var(--fd);font-weight:700;text-transform:uppercase;line-height:.94;margin:0;letter-spacing:-1px}
-p{margin:0}
-ul,ol,dl,dd{margin:0;padding:0;list-style:none}
-pre{margin:0}
-::selection{background:#fff;color:#000}
-:focus-visible{outline:2px solid #fff;outline-offset:3px}
-
-/* ── 1. Фоновые слои ───────────────────────────────────────── */
-.bg-dots{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23ffffff' fill-opacity='.11'/%3E%3C/svg%3E");
-  background-size:26px 26px;
-  mask-image:radial-gradient(120% 90% at 50% 0%,#000 0%,transparent 78%);
-  -webkit-mask-image:radial-gradient(120% 90% at 50% 0%,#000 0%,transparent 78%);
-}
-.bg-lines{
-  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Cpath d='M0 0h4' stroke='%23ffffff' stroke-opacity='.05'/%3E%3C/svg%3E");
-}
-.bg-noise{
-  position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.14;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation:noiseDrift 1.2s steps(3,end) infinite;
-  will-change:transform;
-}
-@keyframes noiseDrift{
-  0%{transform:translate3d(0,0,0)}
-  33%{transform:translate3d(-2%,1%,0)}
-  66%{transform:translate3d(1%,-2%,0)}
-  100%{transform:translate3d(0,0,0)}
-}
-.bg-vignette{
-  position:fixed;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(120% 80% at 50% 0%,transparent 40%,rgba(0,0,0,.75) 100%);
-}
-main,header,footer{position:relative;z-index:2}
-
-/* ── 2. Типографика и утилиты ──────────────────────────────── */
-.wrap{width:100%;max-width:1320px;margin-inline:auto;padding-inline:var(--pad)}
-.mono{font-family:var(--fm);font-size:12px;letter-spacing:.06em}
-.dim{color:var(--fg3)}
-.hr{height:1px;background:var(--line);border:0;margin:0}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-
-.sec{padding:72px 0;border-top:1px solid var(--line)}
-.sec__num{
-  font-family:var(--fm);font-size:11px;letter-spacing:.22em;color:var(--g4);
-  display:flex;align-items:center;gap:12px;margin-bottom:14px;
-}
-.sec__num::after{content:"";flex:1;height:1px;background:var(--line)}
-.sec__title{font-size:clamp(30px,7.6vw,64px);color:#fff;margin-bottom:14px;letter-spacing:-1.2px}
-.sec__lead{color:var(--fg3);max-width:66ch;font-size:15px}
-
-.rv{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s cubic-bezier(.22,.8,.24,1)}
-.rv.in{opacity:1;transform:none}
-.rv.d1{transition-delay:.06s}.rv.d2{transition-delay:.12s}.rv.d3{transition-delay:.18s}
-
-.btn{
-  --h:46px;
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;
-  height:var(--h);padding:0 22px;border-radius:var(--r);
-  font:700 13px/1 var(--fd);text-transform:uppercase;letter-spacing:.1em;
-  transition:transform .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease;
-  will-change:transform;
-}
-.btn svg{width:16px;height:16px;flex:0 0 auto}
-.btn--primary{background:#fff;color:#000;box-shadow:0 0 0 1px #fff}
-.btn--primary:hover{background:#000;color:#fff;transform:scale(1.035) translateY(-1px)}
-.btn--ghost{color:#fff;box-shadow:inset 0 0 0 1px var(--line-2)}
-.btn--ghost:hover{background:#fff;color:#000;transform:scale(1.035) translateY(-1px)}
-.btn--sm{--h:36px;padding:0 14px;font-size:11px}
-.btn:active{transform:scale(.99)}
-
-.status{
-  display:inline-flex;align-items:center;gap:8px;
-  font:500 11px/1 var(--fm);letter-spacing:.1em;color:var(--fg2);
-  border:1px solid var(--line);padding:7px 11px;border-radius:var(--r);white-space:nowrap;
-}
-.status b{color:#fff;font-weight:500}
-.led{width:7px;height:7px;border-radius:50%;background:var(--on);flex:0 0 auto;position:relative}
-.led::after{
-  content:"";position:absolute;inset:-4px;border-radius:50%;
-  border:1px solid var(--on);opacity:.6;
-  animation:led 2.2s ease-out infinite;
-}
-@keyframes led{
-  0%{transform:scale(.6);opacity:.7}
-  70%{transform:scale(1.5);opacity:0}
-  100%{transform:scale(1.5);opacity:0}
-}
-.led--off{background:var(--g4)}
-.led--off::after{border-color:var(--g4)}
-
-/* ── 3. Хедер + глитч-логотип ──────────────────────────────── */
-.hdr{
-  position:fixed;top:0;left:0;right:0;z-index:60;
-  height:var(--hdr);
-  display:flex;align-items:center;
-  background:rgba(0,0,0,.72);
-  backdrop-filter:blur(12px) saturate(120%);
-  -webkit-backdrop-filter:blur(12px) saturate(120%);
-  border-bottom:1px solid transparent;
-  transition:border-color .3s,background .3s;
-}
-.hdr.stuck{border-bottom-color:var(--line);background:rgba(0,0,0,.92)}
-.hdr__in{display:flex;align-items:center;gap:16px;width:100%}
-
-.logo{display:flex;align-items:center;gap:9px;flex:0 0 auto}
-.logo svg{overflow:visible}
-.logo__glitch text{dominant-baseline:middle}
-.logo__g1{fill:#fff}
-.logo__g2{fill:var(--g5);opacity:.55}
-.logo__g3{fill:var(--g3);opacity:.45}
-.logo.jerk .logo__g2{animation:gl1 .34s steps(2,end) 1}
-.logo.jerk .logo__g3{animation:gl2 .34s steps(2,end) 1}
-.logo.jerk .logo__g1{animation:gl3 .34s steps(2,end) 1}
-@keyframes gl1{0%{transform:translate(0)}25%{transform:translate(3px,-1px)}50%{transform:translate(-4px,0)}75%{transform:translate(2px,1px)}100%{transform:translate(0)}}
-@keyframes gl2{0%{transform:translate(0)}25%{transform:translate(-3px,1px)}50%{transform:translate(4px,-1px)}75%{transform:translate(-2px,0)}100%{transform:translate(0)}}
-@keyframes gl3{0%,100%{clip-path:inset(0)}20%{clip-path:inset(18% 0 46% 0)}40%{clip-path:inset(62% 0 12% 0)}60%{clip-path:inset(34% 0 54% 0)}80%{clip-path:inset(0)}}
-
-.nav{display:none;gap:2px;margin-left:auto}
-.nav a{
-  font:500 12px/1 var(--fm);letter-spacing:.08em;text-transform:uppercase;color:var(--fg3);
-  padding:10px 12px;border-radius:var(--r);transition:color .2s,background .2s;
-}
-.nav a:hover,.nav a.active{color:#fff;background:rgba(255,255,255,.06)}
-.hdr__right{display:flex;align-items:center;gap:10px;margin-left:auto}
-.nav + .hdr__right{margin-left:0}
-.hdr__status{display:none}
-
-.burger{
-  width:38px;height:34px;border:1px solid var(--line);border-radius:var(--r);
-  display:grid;place-content:center;gap:4px;
-}
-.burger span{display:block;width:16px;height:1.5px;background:#fff;transition:transform .2s,opacity .2s}
-.burger[aria-expanded="true"] span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
-.burger[aria-expanded="true"] span:nth-child(2){opacity:0}
-.burger[aria-expanded="true"] span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
-
-.msheet{
-  position:fixed;top:var(--hdr);left:0;right:0;z-index:59;
-  background:rgba(0,0,0,.97);border-bottom:1px solid var(--line);
-  padding:12px var(--pad) 20px;display:grid;gap:4px;
-}
-.msheet[hidden]{display:none}
-.msheet a{
-  font:500 13px/1 var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--fg2);
-  padding:14px 4px;border-bottom:1px solid var(--line);
-}
-.msheet .btn{margin-top:14px}
-
-/* ── 4. Hero ───────────────────────────────────────────────── */
-.hero{
-  position:relative;min-height:100vh;min-height:100svh;
-  display:flex;flex-direction:column;justify-content:center;
-  padding:calc(var(--hdr) + 40px) 0 0;overflow:hidden;
-}
-.hero__net{position:absolute;inset:0;z-index:0;pointer-events:none}
-.hero__net svg{width:100%;height:100%}
-.hero__scan{
-  position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.05) 0 1px,transparent 1px 4px);
-  opacity:.55;
-}
-.hero__fade{
-  position:absolute;left:0;right:0;bottom:0;height:180px;z-index:1;pointer-events:none;
-  background:linear-gradient(to bottom,transparent,#000 92%);
-}
-.hero__in{position:relative;z-index:2;width:100%;padding-bottom:34px}
-
-.hero__tag{
-  display:inline-flex;align-items:center;gap:10px;margin-bottom:20px;
-  font:500 10.5px/1 var(--fm);letter-spacing:.2em;color:var(--fg3);text-transform:uppercase;
-  border:1px solid var(--line);padding:8px 11px;border-radius:var(--r);
-}
-.hero__tag-more{display:none}
-.hero h1{
-  font-size:clamp(38px,12.5vw,124px);
-  line-height:.9;letter-spacing:-2px;color:#fff;margin-bottom:20px;
-}
-.hero h1 em{font-style:normal;color:var(--g4);display:block}
-.hero__lead{max-width:56ch;color:var(--fg3);font-size:15px;margin-bottom:28px}
-.hero__lead b{color:var(--fg2);font-weight:500}
-.hero__cta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px}
-
-.metrics{
-  display:grid;grid-template-columns:repeat(2,1fr);
-  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--line);
-  gap:1px;
-}
-.metrics div{background:#000;padding:12px 14px}
-.metrics dt{font:500 9.5px/1 var(--fm);letter-spacing:.16em;color:var(--g4);text-transform:uppercase;margin-bottom:7px}
-.metrics dd{font:500 20px/1 var(--fm);color:#fff;font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:3px}
-.metrics dd small{font-size:10px;color:var(--g4)}
-.metrics .spark{grid-column:1/-1;background:#000;padding:10px 14px}
-.metrics .spark canvas{width:100%;height:38px}
-
-/* ── 5. Возможности ────────────────────────────────────────── */
-.cards{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:34px}
-.card{
-  background:#000;padding:22px 20px 24px;position:relative;
-  transition:background .28s ease,box-shadow .28s ease,transform .28s ease;
-}
-.card:hover{background:var(--bg-1);box-shadow:inset 0 0 0 1px var(--line-3);transform:translateY(-2px)}
-.card__ico{width:34px;height:34px;margin-bottom:16px;color:#fff;transition:transform .3s ease}
-.card:hover .card__ico{transform:translateY(-2px) scale(1.06)}
-.card__ico svg{width:100%;height:100%}
-.card__ico *{stroke:#fff;stroke-width:1.5;fill:none;stroke-linecap:square;stroke-linejoin:miter;vector-effect:non-scaling-stroke}
-.card__idx{position:absolute;top:20px;right:20px;font:500 10px/1 var(--fm);color:var(--g3);letter-spacing:.14em}
-.card h3{font-size:17px;color:#fff;margin-bottom:9px;letter-spacing:-.4px}
-.card p{font-size:13.5px;color:var(--fg3);line-height:1.55}
-.card__meta{
-  margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
-  font:500 10.5px/1.5 var(--fm);color:var(--g4);letter-spacing:.04em;
-}
-
-/* ── 6. Карта узлов + таблица ──────────────────────────────── */
-.mapbox{border:1px solid var(--line);border-radius:var(--r);background:#000;overflow:hidden}
-.mapbox__bar{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:9px 12px;border-bottom:1px solid var(--line);background:var(--bg-1);
-  font:500 10px/1 var(--fm);letter-spacing:.16em;color:var(--g4);text-transform:uppercase;
-}
-.mapbox__bar b{color:#fff;font-weight:500}
-.mapbox__canvas{padding:6px 0}
-.mapbox svg.map{width:100%;height:auto;display:block}
-.map .land{fill:#3a3a3a}
-.map .graticule{stroke:rgba(255,255,255,.06);stroke-width:1;fill:none}
-.mk{transform-box:fill-box;transform-origin:center}
-.mk circle.core{fill:#fff}
-.mk circle.halo{fill:none;stroke:#fff;stroke-width:1;opacity:.5;animation:mk 2.6s ease-out infinite}
-.mk text{font:500 8px var(--fm);fill:var(--g5);letter-spacing:.08em}
-.mk--on circle.core{fill:var(--on)}
-.mk--on circle.halo{stroke:var(--on);animation-delay:.2s}
-@keyframes mk{0%{transform:scale(.4);opacity:.75}75%{transform:scale(2.4);opacity:0}100%{transform:scale(2.4);opacity:0}}
-
-.tbl-wrap{margin-top:22px;border:1px solid var(--line);border-radius:var(--r);overflow-x:auto;background:#000}
-table.nodes{width:100%;min-width:640px;border-collapse:collapse;font-family:var(--fm)}
-table.nodes caption{text-align:left;padding:10px 12px;font-size:10px;letter-spacing:.16em;color:var(--g4);border-bottom:1px solid var(--line);background:var(--bg-1)}
-table.nodes th{
-  font:500 9.5px/1 var(--fm);letter-spacing:.16em;text-transform:uppercase;color:var(--g4);
-  text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--bg-1);
-}
-table.nodes td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:var(--fg2);white-space:nowrap}
-table.nodes tr:last-child td{border-bottom:0}
-table.nodes tbody tr{transition:background .2s}
-table.nodes tbody tr:hover{background:rgba(255,255,255,.035)}
-.n-loc{display:flex;align-items:center;gap:9px;font-weight:500;color:#fff}
-.n-code{font-size:10px;color:var(--g5);border:1px solid var(--line-2);padding:2px 5px;border-radius:1px;letter-spacing:.06em}
-.n-proto span{font-size:10px;color:var(--g5);border:1px solid var(--line);padding:2px 5px;margin-right:4px}
-.n-ping{display:flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums}
-.n-ping i{display:block;width:44px;height:3px;background:rgba(255,255,255,.14);position:relative;overflow:hidden}
-.n-ping i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--p);background:#fff;transition:width .5s ease}
-.n-ping i.bad::after{background:var(--g4)}
-.n-badge{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.12em;color:var(--fg3)}
-.n-badge.on{color:var(--on)}
-.n-row--off{opacity:.45}
-
-/* ── 7. Телеметрия ─────────────────────────────────────────── */
-.tele{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:34px}
-.tele__chart{background:#000;padding:16px 14px 8px}
-.tele__chart canvas{width:100%;height:150px}
-.tele__stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line)}
-.tele__stats div{background:#000;padding:14px}
-.tele__stats dt{font:500 9.5px/1 var(--fm);letter-spacing:.16em;color:var(--g4);text-transform:uppercase;margin-bottom:8px}
-.tele__stats dd{font:500 22px/1 var(--fm);color:#fff;font-variant-numeric:tabular-nums}
-.tele__stats dd small{font-size:10px;color:var(--g4);margin-left:3px}
-.tele__legend{
-  display:flex;flex-wrap:wrap;gap:16px;padding:10px 14px;background:var(--bg-1);border-top:1px solid var(--line);
-  font:500 10px/1 var(--fm);letter-spacing:.1em;color:var(--g4);text-transform:uppercase;
-}
-
-/* ── 8. Отзывы ─────────────────────────────────────────────── */
-.reviews{display:grid;gap:18px;margin-top:34px}
-.review{border:1px solid var(--line);border-radius:var(--r);background:#000;overflow:hidden;transition:box-shadow .3s ease,transform .3s ease}
-.review:hover{box-shadow:0 0 0 1px var(--line-3);transform:translateY(-2px)}
-.term__bar{
-  display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--bg-1);
-  font:500 10px/1 var(--fm);letter-spacing:.1em;color:var(--g4);
-}
-.term__bar i{width:7px;height:7px;border:1px solid var(--g3);border-radius:50%;display:block}
-.term__bar em{margin-left:auto;font-style:normal;color:var(--g4)}
-.term__body{padding:14px;font:400 11.5px/1.75 var(--fm);color:var(--fg3);overflow-x:auto}
-.term__body .p{color:#fff}
-.term__body .ok{color:#fff}
-.term__body .cmd{color:var(--fg2)}
-.term__body .lv{color:var(--g5)}
-.review__quote{padding:16px;border-top:1px solid var(--line);font-size:14px;color:var(--fg2);line-height:1.6}
-.review__foot{
-  display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line);
-  font:500 10.5px/1 var(--fm);letter-spacing:.1em;color:var(--g4);text-transform:uppercase;
-}
-.review__foot b{color:var(--fg2);font-weight:500}
-.mock{padding:16px;border-top:1px solid var(--line);background:var(--bg-1)}
-.mock svg{width:100%;max-width:320px;height:auto;margin-inline:auto}
-.mock .frame{fill:#000;stroke:var(--line-2)}
-.mock .ui{fill:none;stroke:var(--line)}
-.mock .txt{font:500 9px var(--fm);fill:var(--g5);letter-spacing:.06em}
-.mock .txt-w{font:500 9px var(--fm);fill:#fff}
-.mock .bar{fill:var(--g2)}
-.mock .bar-l{fill:rgba(255,255,255,.16)}
-.mock .ok{fill:var(--on)}
-.mock .line{stroke:#fff;stroke-width:1.4;fill:none}
-
-/* ── 9. Подключение ────────────────────────────────────────── */
-.steps{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:34px}
-.step{background:#000;padding:24px 20px;display:grid;gap:14px;transition:background .28s}
-.step:hover{background:var(--bg-1)}
-.step__num{font:700 44px/1 var(--fd);color:var(--g2);letter-spacing:-2px;transition:color .3s}
-.step:hover .step__num{color:#fff}
-.step h3{font-size:16px;color:#fff;margin-bottom:8px;letter-spacing:-.3px}
-.step p{font-size:13.5px;color:var(--fg3)}
-.step code{font-family:var(--fm);font-size:12px;color:var(--g5)}
-
-.connect{display:grid;gap:18px;margin-top:34px}
-.panel{border:1px solid var(--line);border-radius:var(--r);background:#000;overflow:hidden}
-.panel__bar{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;
-  border-bottom:1px solid var(--line);background:var(--bg-1);
-  font:500 10px/1 var(--fm);letter-spacing:.16em;color:var(--g4);text-transform:uppercase;
-}
-.panel--dl{grid-column:1/-1}
-.dl{padding:20px;display:grid;gap:16px}
-.dl__btn{width:100%;--h:54px;font-size:14px}
-.btn .fn{text-transform:none;letter-spacing:0}
-.dl__meta{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
-  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
-}
-.dl__meta div{background:#000;padding:10px 12px}
-.dl__meta dt{font:500 9px/1 var(--fm);letter-spacing:.16em;color:var(--g4);text-transform:uppercase;margin-bottom:6px}
-.dl__meta dd{font:500 12.5px/1 var(--fm);color:#fff}
-.dl__sha{font:400 10.5px/1.6 var(--fm);color:var(--g4);word-break:break-all}
-.dl__sha span{color:var(--g5)}
-.panel__foot{display:flex;flex-wrap:wrap;gap:14px;padding:11px 14px;border-top:1px solid var(--line);background:var(--bg-1);
-  font:500 10px/1 var(--fm);letter-spacing:.1em;color:var(--g4);text-transform:uppercase}
-.panel__foot span{display:inline-flex;align-items:center;gap:7px}
-
-/* ── 10. Футер, курсор ─────────────────────────────────────── */
-.ftr{border-top:1px solid var(--line);padding:34px 0 26px;background:#000}
-.ftr__grid{display:grid;gap:26px}
-.ftr__about p{color:var(--fg3);font-size:13px;max-width:34ch;margin-top:12px}
-.ftr__col h4{font:500 10px/1 var(--fm);letter-spacing:.18em;color:var(--g4);text-transform:uppercase;margin-bottom:12px}
-.ftr__col a{display:block;font-size:13px;color:var(--fg3);padding:5px 0;transition:color .2s}
-.ftr__col a:hover{color:#fff}
-.ftr__bottom{
-  display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;
-  margin-top:30px;padding-top:16px;border-top:1px solid var(--line);
-  font:500 10.5px/1.6 var(--fm);letter-spacing:.06em;color:var(--g4);
-}
-.ftr__bottom .status{border-color:var(--line)}
-
-.cur{position:fixed;top:0;left:0;z-index:99;pointer-events:none;display:none;mix-blend-mode:difference}
-.cur__dot,.cur__ring,.cur__cross{position:absolute;top:0;left:0}
-.cur__dot{width:5px;height:5px;background:#fff;border-radius:50%;transform:translate(-50%,-50%)}
-.cur__ring{width:26px;height:26px;border:1px solid rgba(255,255,255,.55);border-radius:50%;transition:width .2s,height .2s,border-color .2s}
-.cur.hot .cur__ring{width:44px;height:44px;border-color:#fff}
-.cur__cross--h{width:34px;height:1px;background:rgba(255,255,255,.45);transform:translate(-50%,-50%)}
-.cur__cross--v{width:1px;height:34px;background:rgba(255,255,255,.45);transform:translate(-50%,-50%)}
-
-/* ── 11. Адаптив ───────────────────────────────────────────── */
-@media (min-width:480px){
-  :root{--pad:24px}
-  .metrics{grid-template-columns:repeat(4,1fr)}
-  .metrics .spark{grid-column:1/-1}
-  .hero__cta{gap:12px}
-  .hero__tag-more{display:inline}
-  .tele__stats{grid-template-columns:repeat(4,1fr)}
-  .cards{grid-template-columns:repeat(2,1fr)}
-}
-@media (min-width:768px){
-  :root{--pad:32px;--hdr:62px}
-  .sec{padding:104px 0}
-  .nav{display:flex}
-  .burger{display:none}
-  .msheet{display:none!important}
-  .metrics .spark{grid-column:auto}
-  .metrics{grid-template-columns:repeat(4,1fr) 1.4fr}
-  .cards{grid-template-columns:repeat(4,1fr)}
-  .mapbox__canvas{padding:10px 0}
-  .reviews{grid-template-columns:repeat(2,1fr)}
-  .reviews .review:first-child{grid-column:1/-1}
-  .connect{grid-template-columns:1fr 1fr;align-items:start}
-  .dl{grid-template-columns:minmax(260px,.85fr) 1.6fr;grid-template-areas:"btn meta" "btn sha";align-items:center;column-gap:20px}
-  .dl__btn{grid-area:btn;height:100%;min-height:58px}
-  .dl__meta{grid-area:meta}
-  .dl__sha{grid-area:sha}
-  .steps{grid-template-columns:repeat(3,1fr)}
-  .ftr__grid{grid-template-columns:1.4fr 1fr 1fr;gap:34px}
-  .hero__lead{font-size:16px}
-}
-@media (min-width:900px){
-  .hdr__status{display:inline-flex}
-}
-@media (min-width:1200px){
-  :root{--pad:40px;--hdr:68px}
-  .hero h1{letter-spacing:-4px}
-  .reviews{grid-template-columns:repeat(3,1fr)}
-  .reviews .review:first-child{grid-column:auto}
-  .ftr__grid{grid-template-columns:1.6fr 1fr 1fr 1fr}
-  .connect{grid-template-columns:1.15fr .85fr;gap:24px}
-  .hero__in{padding-bottom:52px}
-}
-
-/* ── 12. Reduced motion ────────────────────────────────────── */
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
-  .rv{opacity:1;transform:none}
-  .bg-noise{animation:none}
-}
-
-@keyframes flow{to{stroke-dashoffset:-160}}
-@keyframes nodePulse{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:.25;transform:scale(.72)}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TG WS Proxy - Надёжный прокси для Telegram</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- ФОН СО ЗВЕЗДАМИ -->
+    <canvas id="starfield" class="starfield-canvas"></canvas>
 
-<div class="bg-dots" aria-hidden="true"></div>
-<div class="bg-lines" aria-hidden="true"></div>
-<div class="bg-noise" aria-hidden="true"></div>
-<div class="bg-vignette" aria-hidden="true"></div>
+    <!-- Custom Cursor -->
+    <canvas id="cursor-trail-canvas" class="cursor-trail-canvas"></canvas>
+    <div class="cursor-cross"><span></span><span></span></div>
 
-<div class="cur" id="cur" aria-hidden="true">
-  <span class="cur__cross cur__cross--h"></span>
-  <span class="cur__cross cur__cross--v"></span>
-  <span class="cur__ring"></span>
-  <span class="cur__dot"></span>
-</div>
-
-<a class="sr" href="#features">Перейти к содержимому</a>
-
-<header class="hdr" id="hdr">
-  <div class="wrap hdr__in">
-    <a class="logo" href="#top" id="logo" aria-label="TgWsProxy — на главную">
-      <svg class="logo__glitch" width="132" height="26" viewBox="0 0 132 26" role="img" aria-label="TgWsProxy">
-        <text class="logo__g3" x="1" y="14" font-family="Space Grotesk, sans-serif" font-size="17" font-weight="700" letter-spacing="-0.4">TgWsProxy</text>
-        <text class="logo__g2" x="-1" y="14" font-family="Space Grotesk, sans-serif" font-size="17" font-weight="700" letter-spacing="-0.4">TgWsProxy</text>
-        <text class="logo__g1" x="0" y="14" font-family="Space Grotesk, sans-serif" font-size="17" font-weight="700" letter-spacing="-0.4">TgWsProxy</text>
-      </svg>
-    </a>
-
-    <nav class="nav" aria-label="Основная навигация">
-      <a href="#features">Возможности</a>
-      <a href="#servers">Серверы</a>
-      <a href="#reviews">Отзывы</a>
-      <a href="#connect">Подключение</a>
-    </nav>
-
-    <div class="hdr__right">
-      <span class="status hdr__status"><i class="led"></i><b data-online>12 847</b> online</span>
-      <a class="btn btn--primary btn--sm" href="#connect">Скачать</a>
-      <button class="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="msheet" id="burger">
-        <span></span><span></span><span></span>
-      </button>
+    <!-- БОКОВЫЕ ДЕКОРАТИВНЫЕ ЭЛЕМЕНТЫ -->
+    <div class="side-decoration side-left">
+        <div class="decoration-dot"></div>
+        <div class="decoration-line"></div>
+        <div class="decoration-dot"></div>
+        <div class="decoration-line short"></div>
+        <div class="decoration-dot small"></div>
+        <div class="decoration-floating">◆</div>
+        <div class="decoration-line"></div>
+        <div class="decoration-dot"></div>
+        <div class="decoration-line short"></div>
+        <div class="decoration-dot small"></div>
+        <div class="decoration-floating">◆</div>
+        <div class="decoration-line"></div>
+        <div class="decoration-dot"></div>
     </div>
-  </div>
-</header>
-
-<div class="msheet" id="msheet" hidden>
-  <a href="#features">Возможности</a>
-  <a href="#servers">Серверы</a>
-  <a href="#reviews">Отзывы</a>
-  <a href="#connect">Подключение</a>
-  <a class="btn btn--primary" href="https://github.com/tgwsproxy-windows/hj/releases/download/tgwsproxy/TgWsProxy_windows.exe">Скачать <span class="fn">TgWsProxy_windows.exe</span></a>
-</div>
-
-<main id="top">
-
-<section class="hero" id="hero">
-  <div class="hero__net" id="heroNet" aria-hidden="true"></div>
-  <div class="hero__scan" aria-hidden="true"></div>
-  <div class="hero__fade" aria-hidden="true"></div>
-
-  <div class="wrap hero__in">
-    <span class="hero__tag"><i class="led"></i>WebSocket · MTProto 2.0<span class="hero__tag-more"> · 26 узлов · ноль логов</span></span>
-
-    <h1>
-      Свобода<br>соединения.<em>Без границ.</em>
-    </h1>
-
-    <p class="hero__lead">
-      TgWsProxy поднимает для Telegram постоянный WebSocket-туннель, неотличимый от
-      обычного HTTPS. Он проходит там, где прямое подключение режут DPI-фильтры,
-      держит <b>пинг 30–60 мс</b> и не сохраняет ни одного байта о ваших сессиях.
-    </p>
-
-    <div class="hero__cta">
-      <a class="btn btn--primary" href="https://github.com/tgwsproxy-windows/hj/releases/download/tgwsproxy/TgWsProxy_windows.exe">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg>
-        Скачать <span class="fn">TgWsProxy_windows.exe</span>
-      </a>
-      <a class="btn btn--ghost" href="#features">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 5v14M4 9h4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        Возможности
-      </a>
+    <div class="side-decoration side-right">
+        <div class="decoration-dot"></div>
+        <div class="decoration-line"></div>
+        <div class="decoration-dot"></div>
+        <div class="decoration-line short"></div>
+        <div class="decoration-dot small"></div>
+        <div class="decoration-floating">◆</div>
+        <div class="decoration-line"></div>
+        <div class="decoration-dot"></div>
+        <div class="decoration-line short"></div>
+        <div class="decoration-dot small"></div>
+        <div class="decoration-floating">◆</div>
+        <div class="decoration-line"></div>
+        <div class="decoration-dot"></div>
     </div>
 
-    <dl class="metrics" aria-label="Публичные метрики сети">
-      <div>
-        <dt>Пинг</dt>
-        <dd><span data-m="ping">38</span><small>мс</small></dd>
-      </div>
-      <div>
-        <dt>Аптайм</dt>
-        <dd><span data-m="uptime">99.98</span><small>%</small></dd>
-      </div>
-      <div>
-        <dt>Загрузка</dt>
-        <dd><span data-m="load">41</span><small>%</small></dd>
-      </div>
-      <div>
-        <dt>Узлов онлайн</dt>
-        <dd><span data-m="nodes">24</span><small>/26</small></dd>
-      </div>
-      <div class="spark">
-        <canvas id="spark" width="1200" height="80" aria-label="Пинг за последние 60 секунд" role="img"></canvas>
-      </div>
-    </dl>
-  </div>
-</section>
+    <!-- TOP & BOTTOM BARS -->
+    <div class="top-bar"></div>
+    <div class="bottom-bar"></div>
 
-<section class="sec" id="features">
-  <div class="wrap">
-    <p class="sec__num rv">01 — возможности</p>
-    <h2 class="sec__title rv">Четыре причины<br>держать канал открытым</h2>
-    <p class="sec__lead rv d1">
-      Мы не продаём абстрактную безопасность. Вот что конкретно решает TgWsProxy,
-      если Telegram у вас работает нестабильно, медленно или не работает вовсе.
-    </p>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="animated-particles"></div>
+    </div>
 
-    <div class="cards">
-      <article class="card rv">
-        <span class="card__idx">01</span>
-        <div class="card__ico" aria-hidden="true">
-          <svg viewBox="0 0 32 32">
-            <path d="M16 3l11 4v9c0 6.2-4.4 11-11 13C9.4 27 5 22.2 5 16V7z"/>
-            <path d="M16 10v12M11 16h10"/>
-          </svg>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32" class="logo-emoji">
+                  <circle cx="256" cy="256" r="256" fill="#000000"/>
+                  <path d="M 220 350 L 110 260 L 380 140 L 220 350 Z M 220 350 L 270 280" fill="#ffffff" stroke="#000000" stroke-width="12" stroke-linejoin="round"/>
+                </svg>
+                <span class="logo-text">TG WS Proxy</span>
+            </div>
+            <div class="nav-buttons">
+                <a href="#download" class="btn btn-primary">Скачать</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="gradient-text">Погрузитесь</span><br>
+                    в Свободный<br>
+                    Интернет
+                </h1>
+                
+                <p class="hero-description">
+                    Надёжный WebSocket прокси для Telegram. Быстро, безопасно, легко. 
+                    Подключитесь за одну минуту.
+                </p>
+                
+                <div class="hero-buttons">
+                    <a href="#download" class="btn btn-premium">Скачать сейчас</a>
+                </div>
+            </div>
+
+            <!-- Hero Visual - Windows Terminal -->
+            <div class="hero-visual">
+                <div class="win-terminal-container">
+                    <!-- Windows Title Bar -->
+                    <div class="win-terminal-header">
+                        <div class="win-terminal-tabs">
+                            <div class="win-tab">
+                                <span class="win-tab-icon"></span>
+                                PowerShell — TG-WS-PROXY
+                            </div>
+                        </div>
+                        <div class="win-controls">
+                            <div class="win-btn">&#xE921; ─ </div>
+                            <div class="win-btn">&#xE922; ▢ </div>
+                            <div class="win-btn win-btn-close">✕</div>
+                        </div>
+                    </div>
+                    <!-- Terminal Content Area -->
+                    <div class="win-terminal-body">
+                        <div>
+                            <span class="win-prompt">PS C:\TG-WS-Proxy&gt;</span> 
+                            <span class="win-command">Get-ProxyStatus -Server "Global"</span>
+                        </div>
+                        <div class="win-output-line">Initializing WebSocket Engine...</div>
+                        <div class="win-output-line">[<span class="win-success">✓</span>] Protocol: WebSocket v1.3</div>
+                        <div class="win-output-line">[<span class="win-success">✓</span>] Response Time: <span class="win-highlight">15ms</span></div>
+                        <div class="win-output-line">[<span class="win-success">✓</span>] Uptime: <span class="win-highlight">99.9%</span></div>
+                        <br>
+                        <div>
+                            <span class="win-prompt">PS C:\TG-WS-Proxy&gt;</span> 
+                            <span id="win-typewriter" class="win-command"></span><span class="win-cursor"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <h3>Обход блокировок</h3>
-        <p>Трафик уходит как обычный WSS на 443-м порту. Фильтр видит легитимный TLS и пропускает его, не поднимая флаг.</p>
-        <p class="card__meta">Маскировка под TLS · ротация фронт-доменов · резервный маршрут</p>
-      </article>
+    </section>
 
-      <article class="card rv d1">
-        <span class="card__idx">02</span>
-        <div class="card__ico" aria-hidden="true">
-          <svg viewBox="0 0 32 32"><path d="M17 3L7 18h8l-1 11 11-16h-8z"/></svg>
+    <!-- INTRODUCTION SECTION -->
+    <section class="introduction" id="features">
+        <div class="container intro-grid">
+            <div class="intro-image">
+                <div class="widgets-container">
+                    <div class="widget-card ping-widget">
+                        <div class="big-value-row">
+                            <span class="big-value" id="w-ping">--</span>
+                            <span class="unit">ms</span>
+                        </div>
+                        <div class="widget-label">LATENCY TO PROXY</div>
+                        <button class="action-btn" id="btn-ping-intro" onclick="WIDGETS.triggerSync()">CHECK CONNECTION</button>
+                    </div>
+
+                    <div class="widget-card users-widget">
+                        <div class="widget-header">
+                            <span class="header-label">ONLINE USERS</span>
+                            <span class="pulse-dot"></span>
+                        </div>
+                        <div class="big-value" id="w-users">--</div>
+                        <div class="widget-footer">Active Sessions • Updated every 10s</div>
+                    </div>
+                </div>
+            </div>
+            <div class="intro-content">
+                <div class="section-badge">ВВЕДЕНИЕ</div>
+                <h2 class="section-title">В ТГ ВСЕ ПРОСТО</h2>
+                <p class="section-text">
+                    Скачайте приложение, запустите его от администратора, и вуаля — 
+                    вы уже в Telegram без ограничений. Никаких сложных настроек, 
+                    никаких конфигурационных файлов. Просто работает.
+                </p>
+            </div>
         </div>
-        <h3>Стабильность</h3>
-        <p>Потеря узла не рвёт сессию: клиент переезжает на ближайший живой edge за миллисекунды, не переподключаясь заново.</p>
-        <p class="card__meta">Health-check каждые 2 с · до 1 Гбит/с на пользователя</p>
-      </article>
+    </section>
 
-      <article class="card rv d2">
-        <span class="card__idx">03</span>
-        <div class="card__ico" aria-hidden="true">
-          <svg viewBox="0 0 32 32">
-            <path d="M9 14V10a7 7 0 0114 0v4"/>
-            <path d="M7 14h18v15H7z"/>
-            <path d="M16 20v4"/>
-          </svg>
+    <!-- ABOUT SECTION -->
+    <section class="about" id="why">
+        <div class="container about-grid">
+            <div class="about-content">
+                <div class="section-badge">О ПРОЕКТЕ</div>
+                <h2 class="section-title">Почему TG-WS-PROXY?</h2>
+                <p class="section-text">
+                    Потому что это надёжный, быстрый и простой способ получить доступ к Telegram 
+                    где угодно. Мы используем WebSocket протокол, который обходит большинство 
+                    блокировок и DPI-фильтров. Все данные шифруются, логи не ведутся — 
+                    вашу конфиденциальность никто не нарушает.
+                </p>
+            </div>
+            <div class="about-image">
+                <div class="widgets-container">
+                    <!-- 1. Статус шифрования -->
+                    <div class="widget-card static-widget">
+                        <div class="shield-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <div class="static-title">ENCRYPTED</div>
+                        <div class="static-desc">TLS 1.3 • AES-256-GCM</div>
+                        <div class="static-line"></div>
+                    </div>
+
+                    <!-- 2. Онлайн пользователи -->
+                    <div class="widget-card users-widget">
+                        <div class="widget-header">
+                            <span class="header-label">ONLINE USERS</span>
+                            <span class="pulse-dot"></span>
+                        </div>
+                        <div class="big-value" id="w-users-about">--</div>
+                        <div class="widget-footer">Active Sessions • Updated every 10s</div>
+                    </div>
+
+                    <!-- 3. Активные подключения (Синхронизирован) -->
+                    <div class="widget-card conn-widget">
+                        <div class="widget-header">
+                            <span class="header-label">ACTIVE CONNECTIONS</span>
+                            <span class="status-dot"></span>
+                        </div>
+                        <div class="big-value-row">
+                            <span class="big-value" id="w-slots">--</span>
+                            <span class="unit">/ 658</span>
+                        </div>
+                        <div class="widget-footer">Occupied Nodes • Live Load</div>
+                        <div class="capacity-bar"><div class="capacity-fill" id="w-fill"></div></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <h3>Приватность</h3>
-        <p>Узлы не пишут логи соединений: ни IP, ни времени, ни объёма. Всё живёт в оперативной памяти до конца сессии.</p>
-        <p class="card__meta">Zero-log · MTProto 2.0 + TLS 1.3 · без привязки к телефону</p>
-      </article>
+    </section>
 
-      <article class="card rv d3">
-        <span class="card__idx">04</span>
-        <div class="card__ico" aria-hidden="true">
-          <svg viewBox="0 0 32 32">
-            <circle cx="16" cy="16" r="12"/>
-            <path d="M4 16h24M16 4c4 4 4 20 0 24M16 4c-4 4-4 20 0 24"/>
-          </svg>
+    <!-- WHY BUILD SECTION - 4 Cards -->
+    <section class="why-section" id="why-choose">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">ПРЕИМУЩЕСТВА</div>
+                <h2 class="section-title">Почему выбирают нас</h2>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+                            <polygon points="375,31 205,31 95,275 212,275 150,481 420,181 303,181" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <h3>Молниеносная Скорость</h3>
+                    <p>15ms задержка, нет потери пакетов. Ваш трафик летит на максимальной скорости.</p>
+                    <a href="#" class="card-link">Узнать больше →</a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+                            <path d="M256 32L80 112V240C80 368 256 480 256 480C256 480 432 368 432 240V112L256 32Z" fill="currentColor" stroke="currentColor" stroke-width="0"/>
+                        </svg>
+                    </div>
+                    <h3>Полная Безопасность</h3>
+                    <p>AES-256 шифрование, TLS 1.3, no-logs политика. Ваши данные в безопасности.</p>
+                    <a href="#" class="card-link">Узнать больше →</a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+                            <circle cx="256" cy="256" r="224" fill="none" stroke="currentColor" stroke-width="32"/>
+                            <path d="M256 32C340 80 380 160 380 256C380 352 340 432 256 480C172 432 132 352 132 256C132 160 172 80 256 32Z" fill="none" stroke="currentColor" stroke-width="28" stroke-linejoin="round"/>
+                            <path d="M120 256H392M256 40V472" stroke="currentColor" stroke-width="28" stroke-linecap="round"/>
+                            <path d="M160 100Q200 120 256 120Q312 120 352 100" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round"/>
+                            <path d="M160 412Q200 392 256 392Q312 392 352 412" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Глобальная Сеть</h3>
+                    <p>50+ серверов по всему миру. Автоматический выбор оптимального маршрута.</p>
+                    <a href="#" class="card-link">Узнать больше →</a>
+                </div>
+
+                <div class="feature-card">
+                    <div class="card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+                            <path d="M256 32C141 32 48 125 48 240C48 355 141 448 256 448C371 448 464 355 464 240C464 125 371 32 256 32M256 80C220 80 192 108 192 144C192 180 220 208 256 208C292 208 320 180 320 144C320 108 292 80 256 80M128 320C96 320 70 346 70 378C70 410 96 436 128 436C160 436 186 410 186 378C186 346 160 320 128 320M384 320C352 320 326 346 326 378C326 410 352 436 384 436C416 436 442 410 442 378C442 346 416 320 384 320Z" fill="currentColor"/>
+                            <path d="M180 260L240 320L340 220" stroke="white" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </svg>
+                    </div>
+                    <h3>99.9% Uptime</h3>
+                    <p>Гарантированная доступность 24/7. Техподдержка всегда на связи.</p>
+                    <a href="#" class="card-link">Узнать больше →</a>
+                </div>
+            </div>
         </div>
-        <h3>Простота</h3>
-        <p>Ни портов, ни секретов руками: Telegram сам подхватывает параметры по ссылке. Медиана до статуса Connected — 11 секунд.</p>
-        <p class="card__meta">Один exe · автовыбор узла · автозапуск с системой</p>
-      </article>
-    </div>
-  </div>
-</section>
+    </section>
 
-<section class="sec" id="servers">
-  <div class="wrap">
-    <p class="sec__num rv">02 — сеть</p>
-    <h2 class="sec__title rv">26 узлов,<br>11 публичных локаций</h2>
-    <p class="sec__lead rv d1">
-      Точки на карте — раскрытые площадки. Остальные узлы не публикуются: они
-      включаются автоматически, когда публичный узел начинает тормозить.
-    </p>
-
-    <div class="mapbox rv d2" style="margin-top:34px">
-      <div class="mapbox__bar">
-        <span>dot-matrix · равнопромежуточная проекция</span>
-        <span><b data-m="nodes">24</b>/26 онлайн</span>
-      </div>
-      <div class="mapbox__canvas" id="mapBox"></div>
-    </div>
-
-    <div class="tbl-wrap rv d3">
-      <table class="nodes">
-        <caption>Публичные узлы · телеметрия обновляется каждые 2 секунды</caption>
-        <thead>
-          <tr>
-            <th scope="col">Узел</th>
-            <th scope="col">Локация</th>
-            <th scope="col">Протоколы</th>
-            <th scope="col">Пинг</th>
-            <th scope="col">Аптайм</th>
-            <th scope="col">Нагрузка</th>
-            <th scope="col">Статус</th>
-          </tr>
-        </thead>
-        <tbody id="nodesBody"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="telemetry">
-  <div class="wrap">
-    <p class="sec__num rv">03 — телеметрия</p>
-    <h2 class="sec__title rv">Пинг в реальном времени</h2>
-    <p class="sec__lead rv d1">
-      Значения сняты с публичного health-эндпоинта сети. График обновляется каждые
-      500 миллисекунд — по нему видно, как узел дышит в часы пик.
-    </p>
-
-    <div class="tele rv d2">
-      <div class="tele__chart">
-        <canvas id="chart" width="1400" height="300" aria-label="График пинга в реальном времени" role="img"></canvas>
-      </div>
-      <dl class="tele__stats">
-        <div><dt>Сейчас</dt><dd><span data-t="cur">38</span><small>мс</small></dd></div>
-        <div><dt>Среднее</dt><dd><span data-t="avg">41</span><small>мс</small></dd></div>
-        <div><dt>Минимум</dt><dd><span data-t="min">27</span><small>мс</small></dd></div>
-        <div><dt>Максимум</dt><dd><span data-t="max">62</span><small>мс</small></dd></div>
-      </dl>
-      <p class="tele__legend">
-        <span style="display:inline-flex;align-items:center;gap:8px"><i class="led"></i>поток данных</span>
-        <span>потери пакетов 0.0%</span>
-        <span>jitter 2.4 мс</span>
-        <span>буфер 120 точек</span>
-      </p>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="reviews">
-  <div class="wrap">
-    <p class="sec__num rv">04 — отзывы</p>
-    <h2 class="sec__title rv">Как вернули доступ</h2>
-    <p class="sec__lead rv d1">
-      Три истории с согласия авторов. Имена и города изменены, вывод команд —
-      настоящий: так выглядят типовые сценарии подключения.
-    </p>
-
-    <div class="reviews">
-
-      <article class="review rv">
-        <div class="term__bar"><i></i><i></i><i></i><em>case-01 · мобильный оператор</em></div>
-        <pre class="term__body"><code><span class="p">$</span> <span class="cmd">tgwsproxy status</span>
-<span class="lv">→</span> proxy    eu-fra-01.tgwsproxy.net:8443
-<span class="lv">→</span> protocol wss / mtproto2
-<span class="lv">→</span> state    <span class="ok">CONNECTED</span>
-<span class="lv">→</span> ping     42 ms · loss 0.0%
-<span class="p">$</span> <span class="cmd">_</span></code></pre>
-        <p class="review__quote">
-          Полгода Telegram жил только на домашнем Wi-Fi: мобильный интернет давал таймаут
-          на каждом соединении. Подключил прокси, перезапустил клиент — заработало за
-          одиннадцать секунд. С тех пор ни одного обрыва на перегонах.
-        </p>
-        <div class="mock" data-mock="0"></div>
-        <p class="review__foot"><b>Максим, 27</b> · регион с активным DPI · 214 дней с прокси</p>
-      </article>
-
-      <article class="review rv d1">
-        <div class="term__bar"><i></i><i></i><i></i><em>case-02 · корпоративная сеть</em></div>
-        <pre class="term__body"><code><span class="p">$</span> <span class="cmd">curl -s wss://ams-02/health</span>
-{ "node": "AMS-02", "status": "ok",
-  "rtt_ms": <span class="ok">31</span>, "dpi": "passthrough",
-  "logged": <span class="ok">false</span> }
-<span class="p">$</span> <span class="cmd">_</span></code></pre>
-        <p class="review__quote">
-          IT закрыл мессенджеры, а у нас на Telegram держалась вся операционка: дежурства,
-          алерты, согласования. Согласовали прокси как исключение для одного домена —
-          снаружи это обычный HTTPS, внутрь не лезет вообще никто.
-        </p>
-        <div class="mock" data-mock="1"></div>
-        <p class="review__foot"><b>Аня, 34</b> · офис на 400 человек · стабильный канал</p>
-      </article>
-
-      <article class="review rv d2">
-        <div class="term__bar"><i></i><i></i><i></i><em>case-03 · общежитие, слабый Wi-Fi</em></div>
-        <pre class="term__body"><code><span class="p">$</span> <span class="cmd">tgwsproxy route --auto-failover</span>
-<span class="lv">→</span> switch   HEL-01 → STO-01 (12 ms)
-<span class="lv">→</span> media    stream restored
-<span class="lv">→</span> result   74 ms · loss <span class="ok">0%</span>
-<span class="p">$</span> <span class="cmd">_</span></code></pre>
-        <p class="review__quote">
-          Общежитие, Wi-Fi умирает каждый вечер. Прокси сам перепрыгнул на другой узел,
-          когда первый начал тормозить, — я даже не заметил. Медиа качается, звонки не
-          рвутся, конспекты в облаке синхронизируются.
-        </p>
-        <div class="mock" data-mock="2"></div>
-        <p class="review__foot"><b>Дамир, 22</b> · учёба за границей · 89 дней с прокси</p>
-      </article>
-
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="connect">
-  <div class="wrap">
-    <p class="sec__num rv">05 — подключение</p>
-    <h2 class="sec__title rv">Три шага<br>до свободы</h2>
-    <p class="sec__lead rv d1">
-      Бесплатно, без регистрации и без телеметрии. Один исполняемый файл под
-      Windows 10/11: установщик не нужен, настройка свелась к нажатию «Запустить».
-    </p>
-
-    <ol class="steps">
-      <li class="step rv">
-        <span class="step__num">01</span>
-        <div>
-          <h3>Скачайте клиент</h3>
-          <p>Файл <code>TgWsProxy_windows.exe</code> — 4,1 МБ, Windows 10/11 x64. Установка не требуется, права администратора нужны только для системного прокси.</p>
+    <!-- TECHNOLOGIES SECTION -->
+    <section class="technologies">
+        <div class="container">
+            <h2 class="section-title">ТЕХНОЛОГИИ</h2>
+            <p class="tech-subtitle">На чём построен TG-WS-PROXY</p>
+            
+            <div class="tech-slider">
+                <div class="tech-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32">
+                        <path d="M256 80C268 80 280 72 285 60L305 20C310 8 322 0 334 0C350 0 364 14 364 30C364 40 358 48 350 52L330 72C340 90 348 110 352 132L374 132C390 132 404 146 404 162C404 178 390 192 374 192L352 192C348 214 340 234 330 252L350 272C358 276 364 284 364 294C364 310 350 324 334 324C322 324 310 316 305 304L285 264C280 252 268 244 256 244C244 244 232 252 227 264L207 304C202 316 190 324 178 324C162 324 148 310 148 294C148 284 154 276 162 272L182 252C172 234 164 214 160 192L138 192C122 192 108 178 108 162C108 146 122 132 138 132L160 132C164 110 172 90 182 72L162 52C154 48 148 40 148 30C148 14 162 0 178 0C190 0 202 8 207 20L227 60C232 72 244 80 256 80M256 140C217 140 185 172 185 212C185 251 217 284 256 284C296 284 328 251 328 212C328 172 296 140 256 140Z" fill="currentColor"/>
+                    </svg>
+                    <span>Node.js</span>
+                </div>
+                <div class="tech-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32">
+                        <circle cx="256" cy="280" r="160" fill="currentColor"/>
+                        <circle cx="256" cy="280" r="140" fill="white"/>
+                        <path d="M256 140V420M196 280H316M220 160Q256 180 292 160M220 400Q256 380 292 400" stroke="currentColor" stroke-width="24" fill="none" stroke-linecap="round"/>
+                        <path d="M140 240Q160 260 140 300Q160 320 140 360" stroke="currentColor" stroke-width="24" fill="none" stroke-linecap="round"/>
+                        <path d="M372 240Q352 260 372 300Q352 320 372 360" stroke="currentColor" stroke-width="24" fill="none" stroke-linecap="round"/>
+                        <ellipse cx="256" cy="200" rx="80" ry="40" fill="none" stroke="currentColor" stroke-width="20"/>
+                        <ellipse cx="256" cy="280" rx="100" ry="50" fill="none" stroke="currentColor" stroke-width="20"/>
+                        <ellipse cx="256" cy="360" rx="80" ry="40" fill="none" stroke="currentColor" stroke-width="20"/>
+                    </svg>
+                    <span>WebSocket</span>
+                </div>
+                <div class="tech-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32">
+                        <path d="M80 120C80 80 120 40 160 40C180 40 200 50 210 65L240 30C250 15 265 10 280 15L300 50C310 40 325 35 340 40C360 45 375 60 375 80L375 180C375 200 365 220 350 230L480 250C490 250 500 255 500 265C500 275 490 280 480 280L380 280C370 285 360 290 350 295L350 340C350 360 340 375 325 380L300 360C290 355 280 355 270 360L260 400C255 415 245 425 230 420L210 370C200 375 190 380 180 380L120 360C100 355 85 340 85 320L85 180C85 160 85 140 80 120Z" fill="currentColor"/>
+                        <circle cx="420" cy="280" r="20" fill="white"/>
+                        <path d="M330 300C320 310 310 320 310 340C310 360 325 375 340 375L380 350C385 345 390 340 390 330" fill="none" stroke="white" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Docker</span>
+                </div>
+                <div class="tech-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32">
+                        <rect x="40" y="40" width="432" height="280" rx="32" fill="currentColor"/>
+                        <rect x="80" y="80" width="352" height="200" rx="16" fill="white"/>
+                        <rect x="160" y="340" width="192" height="40" rx="16" fill="currentColor"/>
+                        <rect x="200" y="380" width="112" height="60" rx="16" fill="currentColor"/>
+                    </svg>
+                    <span>Linux</span>
+                </div>
+            </div>
         </div>
-      </li>
-      <li class="step rv d1">
-        <span class="step__num">02</span>
-        <div>
-          <h3>Запустите</h3>
-          <p>Клиент опрашивает сеть, выбирает ближайший живой узел по пингу и поднимает туннель WSS/MTProto. Автозапуск с системой — одним переключателем.</p>
+    </section>
+
+    <!-- HOW WE BUILD SECTION - 4 Steps -->
+    <section class="how-section" id="how">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">ПРОЦЕСС</div>
+                <h2 class="section-title">Как это работает</h2>
+            </div>
+
+            <div class="process-steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <h3>Скачивание</h3>
+                    <p>Загрузите приложение для Windows 10/11</p>
+                </div>
+
+                <div class="step-arrow">→</div>
+
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <h3>Запуск</h3>
+                    <p>Запустите от администратора</p>
+                </div>
+
+                <div class="step-arrow">→</div>
+
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <h3>Подключение</h3>
+                    <p>Откройте Telegram</p>
+                </div>
+
+                <div class="step-arrow">→</div>
+
+                <div class="step">
+                    <div class="step-number">04</div>
+                    <h3>Свобода</h3>
+                    <p>Пользуйтесь без ограничений</p>
+                </div>
+            </div>
         </div>
-      </li>
-      <li class="step rv d2">
-        <span class="step__num">03</span>
-        <div>
-          <h3>Проверьте статус</h3>
-          <p>В окне клиента и в настройках Telegram появится <code>Proxy: Connected</code>. Если узел просядет, приложение само переведёт трафик на резервный.</p>
+    </section>
+
+    <!-- TELEGRAM STYLE CTA SECTION -->
+    <section class="telegram-cta">
+        <div class="container telegram-cta-container">
+            <div class="telegram-window">
+                <div class="telegram-header">
+                    <div class="header-title">TG WS Proxy</div>
+                    <div class="header-status">в сети</div>
+                </div>
+                <div class="telegram-chat">
+                    <div class="message message-in">
+                        <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                            <path d="M120 280C110 280 100 290 100 300C100 310 110 320 120 320L160 320C170 320 180 310 180 300C180 290 170 280 160 280L120 280M200 120C190 120 180 130 180 140C180 200 180 240 180 300C180 310 190 320 200 320C210 320 220 310 220 300L220 140C220 130 210 120 200 120M280 80C270 80 260 90 260 100C260 200 260 240 260 300C260 310 270 320 280 320C290 320 300 310 300 300L300 100C300 90 290 80 280 80M360 100C350 100 340 110 340 120C340 200 340 240 340 300C340 310 350 320 360 320C370 320 380 310 380 300L380 120C380 110 370 100 360 100M420 160C410 160 400 170 400 180C400 220 400 240 400 300C400 310 410 320 420 320C430 320 440 310 440 300L440 180C440 170 430 160 420 160" fill="none" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg> Привет!</span>
+                    </div>
+                    <div class="message message-in animate-msg-1">
+                        <span>Добро пожаловать в TG WS Proxy</span>
+                    </div>
+                    <div class="message message-in animate-msg-2">
+                        <span>Это надёжный прокси для Telegram</span>
+                    </div>
+                    <div class="message message-in animate-msg-3">
+                        <span>Быстро <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin: 0 4px;">
+                            <polygon points="375,31 205,31 95,275 212,275 150,481 420,181 303,181" fill="currentColor"/>
+                        </svg> Безопасно <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin: 0 4px;">
+                            <path d="M256 32L80 112V240C80 368 256 480 256 480C256 480 432 368 432 240V112L256 32Z" fill="currentColor" stroke="currentColor" stroke-width="0"/>
+                        </svg> Легко <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin: 0 4px;">
+                            <path d="M256 32C141 32 48 125 48 240C48 355 141 448 256 448C371 448 464 355 464 240C464 125 371 32 256 32M256 80C220 80 192 108 192 144C192 180 220 208 256 208C292 208 320 180 320 144C320 108 292 80 256 80M128 320C96 320 70 346 70 378C70 410 96 436 128 436C160 436 186 410 186 378C186 346 160 320 128 320M384 320C352 320 326 346 326 378C326 410 352 436 384 436C416 436 442 410 442 378C442 346 416 320 384 320Z" fill="currentColor"/>
+                            <path d="M180 260L240 320L340 220" stroke="white" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </svg></span>
+                    </div>
+                    <div class="message message-out animate-msg-4">
+                        <span>Как это работает?</span>
+                    </div>
+                    <div class="message message-in animate-msg-5">
+                        <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                            <rect x="60" y="40" width="392" height="432" rx="80" fill="currentColor"/>
+                            <text x="256" y="380" font-size="280" font-weight="bold" text-anchor="middle" fill="white">1</text>
+                        </svg> Скачай приложение</span>
+                    </div>
+                    <div class="message message-in animate-msg-6">
+                        <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                            <rect x="60" y="40" width="392" height="432" rx="80" fill="currentColor"/>
+                            <text x="256" y="380" font-size="280" font-weight="bold" text-anchor="middle" fill="white">2</text>
+                        </svg> Запусти от администратора</span>
+                    </div>
+                    <div class="message message-in animate-msg-7">
+                        <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                            <rect x="60" y="40" width="392" height="432" rx="80" fill="currentColor"/>
+                            <text x="256" y="380" font-size="280" font-weight="bold" text-anchor="middle" fill="white">3</text>
+                        </svg> Открой Telegram</span>
+                    </div>
+                    <div class="message message-in animate-msg-8">
+                        <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                            <rect x="60" y="40" width="392" height="432" rx="80" fill="currentColor"/>
+                            <text x="256" y="380" font-size="280" font-weight="bold" text-anchor="middle" fill="white">4</text>
+                        </svg> Пользуйся без ограничений <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" style="display: inline-block; vertical-align: middle; margin-left: 6px;">
+                            <path d="M120 380C140 420 180 460 240 480C300 500 360 480 400 440L440 340C460 300 440 260 400 240L300 180C260 160 220 180 200 220L120 380Z" fill="currentColor"/>
+                            <circle cx="300" cy="120" r="80" fill="currentColor"/>
+                        </svg></span>
+                    </div>
+                </div>
+                <div class="telegram-input">
+                    <input type="text" placeholder="Напиши сообщение...">
+                    <button class="send-btn">➤</button>
+                </div>
+            </div>
+
+            <div class="cta-content">
+                <h2 class="cta-main-title">
+                    <span class="gradient-text-large">присоединяйся к нам</span>
+                </h2>
+                <p class="cta-description">
+                    Более 1000+ пользователей уже используют TG-WS-PROXY и довольны результатом.
+                    Присоединись и ты!
+                </p>
+                <div class="cta-stats">
+                    <div class="stat">
+                        <div class="stat-number">1000+</div>
+                        <div class="stat-label">пользователей довольны результатом</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">15ms</div>
+                        <div class="stat-label">Средняя задержка</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">99.9%</div>
+                        <div class="stat-label">Гарантированный uptime</div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </li>
-    </ol>
+    </section>
 
-    <div class="connect">
-      <div class="panel panel--dl rv">
-        <div class="panel__bar"><span>Сборка для Windows</span><span>v1.4.2 · x64 · без установки</span></div>
-        <div class="dl">
-          <a class="btn btn--primary dl__btn" href="https://github.com/tgwsproxy-windows/hj/releases/download/tgwsproxy/TgWsProxy_windows.exe">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 20h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg>
-            Скачать <span class="fn">TgWsProxy_windows.exe</span>
-          </a>
-          <dl class="dl__meta">
-            <div><dt>Размер</dt><dd>4,1 МБ</dd></div>
-            <div><dt>ОС</dt><dd>Windows 10/11</dd></div>
-            <div><dt>Цена</dt><dd>бесплатно</dd></div>
-          </dl>
-          <p class="dl__sha">SHA-256: <span>9f2c41ab…7d10</span> — сверьте перед запуском</p>
+    <!-- CTA SECTION -->
+    <section class="cta">
+        <div class="container">
+            <h2 class="cta-title">Готовы начать?</h2>
+            <p class="cta-subtitle">Все вопросы решены?</p>
         </div>
-        <p class="panel__foot">
-          <span><i class="led"></i>релиз опубликован</span>
-          <span>автообновление</span>
-          <span>телеметрии нет</span>
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-</main>
+    <!-- Download Section -->
+    <section class="download" id="download">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">ЗАГРУЗКА</div>
+                <h2 class="section-title">Скачайте прокси для Telegram</h2>
+            </div>
 
-<footer class="ftr">
-  <div class="wrap">
-    <div class="ftr__grid">
-      <div class="ftr__about">
-        <a class="logo" href="#top" aria-label="TgWsProxy">
-          <svg width="132" height="26" viewBox="0 0 132 26" aria-hidden="true">
-            <text x="0" y="14" font-family="Space Grotesk, sans-serif" font-size="17" font-weight="700" fill="#fff" letter-spacing="-0.4">TgWsProxy</text>
-          </svg>
-        </a>
-        <p>Распределённая сеть WebSocket-прокси для Telegram. Свобода соединения без границ.</p>
-      </div>
-      <nav class="ftr__col" aria-label="Продукт">
-        <h4>Продукт</h4>
-        <a href="#features">Возможности</a>
-        <a href="#servers">Узлы сети</a>
-        <a href="#telemetry">Телеметрия</a>
-        <a href="#connect">Подключение</a>
-      </nav>
-      <nav class="ftr__col" aria-label="Технологии">
-        <h4>Технологии</h4>
-        <a href="#features">Обход DPI</a>
-        <a href="#features">MTProto 2.0</a>
-        <a href="#features">Zero-log</a>
-        <a href="#servers">Anycast edge</a>
-      </nav>
-      <nav class="ftr__col" aria-label="Загрузка">
-        <h4>Загрузка</h4>
-        <a href="https://github.com/tgwsproxy-windows/hj/releases/download/tgwsproxy/TgWsProxy_windows.exe">TgWsProxy_windows.exe</a>
-        <a href="https://github.com/tgwsproxy-windows/hj/releases" target="_blank" rel="noopener">Все релизы</a>
-        <a href="#connect">Инструкция</a>
-        <a href="#telemetry">Статус сети</a>
-      </nav>
-    </div>
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="download-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48">
+                            <rect x="60" y="60" width="392" height="340" rx="48" ry="48" fill="none" stroke="currentColor" stroke-width="32"/>
+                            <polyline points="256,240 256,400" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <polyline points="180,320 256,400 332,320" stroke="currentColor" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                            <line x1="100" y1="160" x2="412" y2="160" stroke="currentColor" stroke-width="32" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Windows 10/11</h3>
+                    <p class="download-size">Размер: 52.2 МБ</p>
 
-    <div class="ftr__bottom">
-      <span>© <span id="year">2025</span> TgWsProxy. Сервис не связан с Telegram Messenger Inc.</span>
-      <span class="status"><i class="led"></i>All systems operational · <span id="clock">--:--:--</span> UTC</span>
-    </div>
-  </div>
-</footer>
+                    <a href="https://github.com/tg-ws-proxy/tgwsproxy.github.io/releases/download/TgWs-proxy/Tg-ws-proxy.exe" class="btn btn-premium btn-block">Скачать .exe</a>
+                    <p class="download-info">Windows 10 и 11 (все версии)</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<script>
-(function () {
-  'use strict';
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2026 TG WS Proxy. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
 
-  const $  = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
-  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SVGNS = 'http://www.w3.org/2000/svg';
-
-  /* ── 1. Утилиты ─────────────────────────────────────────── */
-  function mulberry32(seed) {
-    return function () {
-      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  const NBSP = '\u00A0';
-  const group = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
-  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-
-  function el(name, attrs, parent) {
-    const node = document.createElementNS(SVGNS, name);
-    for (const k in attrs) node.setAttribute(k, attrs[k]);
-    if (parent) parent.appendChild(node);
-    return node;
-  }
-
-  /* ── 2. Hero: анимированная SVG-сеть ────────────────────── */
-  (function heroNet() {
-    const host = $('#heroNet');
-    if (!host) return;
-
-    const W = 1600, H = 900;
-    const svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'xMidYMid slice' }, host);
-    const gFar = el('g', {}, svg);
-    const gNear = el('g', {}, svg);
-
-    const rnd = mulberry32(20240117);
-    const nodes = [];
-    for (let i = 0; i < 52; i++) {
-      nodes.push({
-        x: rnd() * W, y: rnd() * H,
-        r: 1.6 + rnd() * 2.4,
-        near: rnd() > .55,
-        ph: rnd() * 6.28
-      });
-    }
-
-    const wires = [];
-    nodes.forEach((a, i) => {
-      nodes
-        .map((b, j) => ({ j: j, d: Math.hypot(a.x - b.x, a.y - b.y) }))
-        .filter((o) => o.j !== i)
-        .sort((p, q) => p.d - q.d)
-        .slice(0, 2)
-        .forEach((o) => { if (o.d < 420) wires.push([i, o.j, o.d]); });
-    });
-
-    wires.forEach((w) => {
-      const a = nodes[w[0]], b = nodes[w[1]], d = w[2];
-      const line = el('line', {
-        x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-        stroke: '#ffffff',
-        'stroke-opacity': (0.40 - (d / 420) * 0.24).toFixed(2),
-        'stroke-width': (a.near && b.near) ? 1 : 0.7,
-        'stroke-dasharray': '5 11'
-      }, (a.near && b.near) ? gNear : gFar);
-      const dur = 3.6 + rnd() * 4.4;
-      line.style.animation = 'flow ' + dur.toFixed(2) + 's linear infinite';
-      line.style.animationDelay = (-rnd() * dur).toFixed(2) + 's';
-    });
-
-    nodes.forEach((n) => {
-      const c = el('circle', {
-        cx: n.x, cy: n.y, r: n.r.toFixed(2),
-        fill: '#ffffff',
-        'fill-opacity': n.near ? 0.95 : 0.62
-      }, n.near ? gNear : gFar);
-      c.style.transformBox = 'fill-box';
-      c.style.transformOrigin = 'center';
-      c.style.animation = 'nodePulse ' + (2.4 + (n.ph % 2.6)).toFixed(2) + 's ease-in-out infinite';
-      c.style.animationDelay = (-n.ph).toFixed(2) + 's';
-    });
-
-    if (REDUCED) return;
-    let tx = 0, ty = 0, cx = 0, cy = 0;
-    function step() {
-      cx += (tx - cx) * 0.08;
-      cy += (ty - cy) * 0.08;
-      gFar.setAttribute('transform', 'translate(' + (cx * 10).toFixed(2) + ',' + (cy * 10).toFixed(2) + ')');
-      gNear.setAttribute('transform', 'translate(' + (cx * 26).toFixed(2) + ',' + (cy * 26).toFixed(2) + ')');
-      requestAnimationFrame(step);
-    }
-    window.addEventListener('mousemove', (e) => {
-      tx = (e.clientX / window.innerWidth - 0.5) * 2;
-      ty = (e.clientY / window.innerHeight - 0.5) * 2;
-    }, { passive: true });
-    requestAnimationFrame(step);
-  })();
-
-  /* ── 3. Карта узлов + таблица ───────────────────────────── */
-  const NODES = [
-    { id: 'FRA-01', city: 'Франкфурт', code: 'DE', lon: 8.68,   lat: 50.11, proto: ['wss', 'mt2'], on: true },
-    { id: 'AMS-02', city: 'Амстердам', code: 'NL', lon: 4.90,   lat: 52.37, proto: ['wss', 'mt2'], on: true },
-    { id: 'HEL-01', city: 'Хельсинки', code: 'FI', lon: 24.94,  lat: 60.17, proto: ['wss'],        on: true },
-    { id: 'STO-01', city: 'Стокгольм', code: 'SE', lon: 18.07,  lat: 59.33, proto: ['wss', 'mt2'], on: true },
-    { id: 'LON-01', city: 'Лондон',    code: 'GB', lon: -0.12,  lat: 51.51, proto: ['wss'],        on: true },
-    { id: 'PAR-01', city: 'Париж',     code: 'FR', lon: 2.35,   lat: 48.86, proto: ['wss', 'mt2'], on: true },
-    { id: 'WAW-01', city: 'Варшава',   code: 'PL', lon: 21.01,  lat: 52.23, proto: ['wss'],        on: true },
-    { id: 'IST-01', city: 'Истанбул',  code: 'TR', lon: 28.98,  lat: 41.01, proto: ['wss', 'mt2'], on: true },
-    { id: 'DXB-01', city: 'Дубай',     code: 'AE', lon: 55.27,  lat: 25.20, proto: ['wss'],        on: true },
-    { id: 'SIN-01', city: 'Сингапур',  code: 'SG', lon: 103.82, lat: 1.35,  proto: ['wss', 'mt2'], on: true },
-    { id: 'TYO-01', city: 'Токио',     code: 'JP', lon: 139.69, lat: 35.69, proto: ['wss'],        on: false }
-  ];
-
-  const cellRefs = {};
-
-  (function buildMap() {
-    const host = $('#mapBox');
-    if (!host) return;
-    const MW = 1000, MH = 500;
-    const svg = el('svg', { viewBox: '0 0 ' + MW + ' ' + MH, class: 'map' }, host);
-    const px = (lon) => (lon + 180) / 360 * MW;
-    const py = (lat) => (90 - lat) / 180 * MH;
-
-    for (let x = 0; x <= MW; x += MW / 12) el('line', { x1: x, y1: 0, x2: x, y2: MH, class: 'graticule' }, svg);
-    for (let y = 0; y <= MH; y += MH / 6) el('line', { x1: 0, y1: y, x2: MW, y2: y, class: 'graticule' }, svg);
-
-    const LAND = [
-      [ 15,  72, -165, -55], [ 12,  20, -105, -78],
-      [-55,  12,  -80, -35],
-      [ 36,  70,  -10,  60], [ 60,  70,   10,  60],
-      [-35,  35,  -15,  50],
-      [  8,  60,   60, 145], [ 45,  70,   60, 180],
-      [-38, -12,  113, 153]
-    ];
-    const dots = [];
-    LAND.forEach((b) => {
-      for (let lat = b[0]; lat <= b[1]; lat += 7) {
-        for (let lon = b[2]; lon <= b[3]; lon += 7) {
-          dots.push([lon + (lat % 3), lat + (lon % 3)]);
-        }
-      }
-    });
-    dots.forEach((d) => el('circle', { cx: px(d[0]).toFixed(1), cy: py(d[1]).toFixed(1), r: 1.4, class: 'land' }, svg));
-
-    NODES.forEach((n) => {
-      const g = el('g', { class: 'mk' + (n.on ? ' mk--on' : ''), transform: 'translate(' + px(n.lon).toFixed(1) + ',' + py(n.lat).toFixed(1) + ')' }, svg);
-      el('circle', { class: 'halo', r: 4 }, g);
-      el('circle', { class: 'core', r: 3.2 }, g);
-      const t = el('text', { x: 0, y: 18, 'text-anchor': 'middle' }, g);
-      t.textContent = n.id;
-    });
-  })();
-
-  (function buildTable() {
-    const body = $('#nodesBody');
-    if (!body) return;
-    const seedR = mulberry32(7);
-    const rows = NODES.map((n) => {
-      n.ping = Math.round(27 + seedR() * 36);
-      n.up = 99.9 + seedR() * 0.09;
-      n.load = Math.round(18 + seedR() * 44);
-      const pct = clamp(n.ping / 80 * 100, 8, 100);
-      return '<tr' + (n.on ? '' : ' class="n-row--off"') + ' data-id="' + n.id + '">' +
-        '<td class="n-loc">' + n.id + ' <span class="n-code">' + n.code + '</span></td>' +
-        '<td>' + n.city + '</td>' +
-        '<td class="n-proto">' + n.proto.map((p) => '<span>' + p + '</span>').join('') + '</td>' +
-        '<td class="n-ping"><i style="--p:' + pct.toFixed(0) + '%"></i><span>' + n.ping + ' мс</span></td>' +
-        '<td data-col="up">' + n.up.toFixed(2) + '%</td>' +
-        '<td data-col="load">' + n.load + '%</td>' +
-        '<td><span class="n-badge' + (n.on ? ' on' : '') + '"><i class="led' + (n.on ? '' : ' led--off') + '"></i>' + (n.on ? 'ONLINE' : 'OFFLINE') + '</span></td>' +
-        '</tr>';
-    });
-    body.innerHTML = rows.join('');
-    NODES.forEach((n) => {
-      const tr = body.querySelector('[data-id="' + n.id + '"]');
-      if (!tr) return;
-      cellRefs[n.id] = {
-        ping: tr.querySelector('.n-ping span'),
-        bar: tr.querySelector('.n-ping i'),
-        up: tr.querySelector('[data-col="up"]'),
-        load: tr.querySelector('[data-col="load"]')
-      };
-    });
-  })();
-
-  /* ── 4. Метрики + спарклайн (тик 2 с) ───────────────────── */
-  const sparkBuf = [];
-  (function () {
-    const seedR = mulberry32(11);
-    for (let i = 0; i < 42; i++) sparkBuf.push(30 + seedR() * 22);
-  })();
-
-  function drawSpark() {
-    const c = $('#spark');
-    if (!c) return;
-    const ctx = c.getContext('2d'), w = c.width, h = c.height;
-    ctx.clearRect(0, 0, w, h);
-    const min = Math.min.apply(null, sparkBuf), max = Math.max.apply(null, sparkBuf);
-    const span = Math.max(max - min, 6);
-    ctx.beginPath();
-    sparkBuf.forEach((v, i) => {
-      const x = i / (sparkBuf.length - 1) * w;
-      const y = h - 6 - (v - min) / span * (h - 12);
-      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-    });
-    ctx.strokeStyle = 'rgba(255,255,255,.85)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-
-  let online = 12847;
-  function tickMetrics() {
-    NODES.forEach((n) => {
-      if (!n.on) return;
-      n.ping = Math.round(clamp(n.ping + (Math.random() * 14 - 7), 24, 74));
-      n.up = clamp(n.up + (Math.random() * 0.02 - 0.01), 99.9, 99.99);
-      n.load = Math.round(clamp(n.load + (Math.random() * 8 - 4), 12, 86));
-      const r = cellRefs[n.id];
-      if (r) {
-        r.ping.textContent = n.ping + ' мс';
-        r.bar.style.setProperty('--p', clamp(n.ping / 80 * 100, 8, 100).toFixed(0) + '%');
-        r.up.textContent = n.up.toFixed(2) + '%';
-        r.load.textContent = n.load + '%';
-      }
-    });
-    const live = NODES.filter((n) => n.on);
-    const avg = live.reduce((s, n) => s + n.ping, 0) / live.length;
-    const load = live.reduce((s, n) => s + n.load, 0) / live.length;
-    setM('ping', Math.round(avg));
-    setM('uptime', clamp(live.reduce((s, n) => s + n.up, 0) / live.length, 99.9, 99.99).toFixed(2));
-    setM('load', Math.round(load));
-    online += Math.round(Math.random() * 6);
-    const o = $('[data-online]');
-    if (o) o.textContent = group(online);
-    sparkBuf.push(avg); sparkBuf.shift();
-    drawSpark();
-  }
-  function setM(k, v) { $$('[data-m="' + k + '"]').forEach((n) => { n.textContent = v; }); }
-
-  tickMetrics();
-  setInterval(tickMetrics, 2000);
-
-  /* ── 5. График пинга (тик 500 мс) ───────────────────────── */
-  const chartBuf = [];
-  (function () {
-    const seedR = mulberry32(23);
-    for (let i = 0; i < 120; i++) chartBuf.push(34 + seedR() * 16);
-  })();
-
-  function drawChart() {
-    const c = $('#chart');
-    if (!c) return;
-    const ctx = c.getContext('2d'), w = c.width, h = c.height;
-    ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = 'rgba(255,255,255,.07)';
-    ctx.lineWidth = 1;
-    for (let i = 1; i < 5; i++) {
-      const y = h * i / 5;
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-    }
-    const min = Math.min.apply(null, chartBuf) - 4;
-    const max = Math.max.apply(null, chartBuf) + 4;
-    const span = Math.max(max - min, 8);
-    const px = (i) => i / (chartBuf.length - 1) * w;
-    const py = (v) => h - 10 - (v - min) / span * (h - 20);
-    ctx.beginPath();
-    ctx.moveTo(0, h);
-    chartBuf.forEach((v, i) => ctx.lineTo(px(i), py(v)));
-    ctx.lineTo(w, h);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(0,255,204,.05)';
-    ctx.fill();
-    ctx.beginPath();
-    chartBuf.forEach((v, i) => { i ? ctx.lineTo(px(i), py(v)) : ctx.moveTo(px(i), py(v)); });
-    ctx.strokeStyle = '#00ffcc';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    const last = chartBuf[chartBuf.length - 1];
-    ctx.fillStyle = '#00ffcc';
-    ctx.beginPath();
-    ctx.arc(w - 3, py(last), 3.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    setT('cur', Math.round(last));
-    setT('avg', Math.round(chartBuf.reduce((s, v) => s + v, 0) / chartBuf.length));
-    setT('min', Math.round(Math.min.apply(null, chartBuf)));
-    setT('max', Math.round(Math.max.apply(null, chartBuf)));
-  }
-  function setT(k, v) { $$('[data-t="' + k + '"]').forEach((n) => { n.textContent = v; }); }
-
-  drawChart();
-  setInterval(function () {
-    const last = chartBuf[chartBuf.length - 1];
-    chartBuf.push(clamp(last + (Math.random() * 10 - 5), 26, 68));
-    chartBuf.shift();
-    drawChart();
-  }, 500);
-
-  /* ── 6. SVG-макеты Telegram ─────────────────────────────── */
-  (function buildMocks() {
-    const specs = [
-      { title: 'TgWsProxy', msgs: [
-        ['l', 'Интернет ловит?'],
-        ['r', 'уже через прокси'],
-        ['ok', 'Proxy: Connected'],
-        ['wave', null]
-      ]},
-      { title: 'Ops · дежурство', msgs: [
-        ['l', 'алерт: сервер 4 — OK'],
-        ['r', 'принято'],
-        ['ok', 'WSS · Connected'],
-        ['wave', null]
-      ]},
-      { title: 'TgWsProxy', msgs: [
-        ['l', 'Wi-Fi лёг...'],
-        ['r', 'узел сменился сам'],
-        ['ok', '74 мс · loss 0%'],
-        ['wave', null]
-      ]}
-    ];
-    $$('[data-mock]').forEach((host) => {
-      const i = +host.getAttribute('data-mock');
-      const spec = specs[i];
-      if (!spec) return;
-      const svg = el('svg', { viewBox: '0 0 320 340' }, host);
-      el('rect', { x: .5, y: .5, width: 319, height: 339, rx: 4, class: 'frame' }, svg);
-      el('rect', { x: 1, y: 1, width: 318, height: 52, class: 'bar' }, svg);
-      [22, 34, 46].forEach((x) => el('circle', { cx: x, cy: 26, r: 3, class: 'ui' }, svg));
-      const t = el('text', { x: 64, y: 30, class: 'txt-w' }, svg);
-      t.textContent = spec.title;
-      let y = 72;
-      spec.msgs.forEach((m) => {
-        if (m[0] === 'l') {
-          el('rect', { x: 14, y: y, width: 168, height: 38, rx: 3, class: 'bar' }, svg);
-          const tx = el('text', { x: 28, y: y + 23, class: 'txt-w' }, svg);
-          tx.textContent = m[1];
-        } else if (m[0] === 'r') {
-          el('rect', { x: 138, y: y, width: 168, height: 38, rx: 3, class: 'bar-l' }, svg);
-          const tx = el('text', { x: 152, y: y + 23, class: 'txt-w' }, svg);
-          tx.textContent = m[1];
-        } else if (m[0] === 'ok') {
-          el('circle', { cx: 24, cy: y + 19, r: 3.5, class: 'ok' }, svg);
-          const tx = el('text', { x: 36, y: y + 23, class: 'txt-w' }, svg);
-          tx.textContent = m[1];
-        } else {
-          el('rect', { x: 14, y: y, width: 188, height: 38, rx: 3, class: 'bar' }, svg);
-          el('path', { d: 'M28 ' + (y + 19) + ' q8 -12 16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0 t16 0', class: 'line' }, svg);
-          const tx = el('text', { x: 160, y: y + 23, class: 'txt' }, svg);
-          tx.textContent = '0:14';
-        }
-        y += 56;
-      });
-    });
-  })();
-
-  /* ── 7. Курсор ──────────────────────────────────────────── */
-  (function cursor() {
-    const cur = $('#cur');
-    if (!cur || REDUCED || !window.matchMedia('(pointer: fine)').matches) return;
-    const dot = cur.querySelector('.cur__dot');
-    const ring = cur.querySelector('.cur__ring');
-    const ch = cur.querySelector('.cur__cross--h');
-    const cv = cur.querySelector('.cur__cross--v');
-    cur.style.display = 'block';
-    let x = innerWidth / 2, y = innerHeight / 2, rx = x, ry = y;
-    window.addEventListener('mousemove', (e) => { x = e.clientX; y = e.clientY; }, { passive: true });
-    (function step() {
-      rx += (x - rx) * 0.18;
-      ry += (y - ry) * 0.18;
-      const t = (a, b) => 'translate(' + a + 'px,' + b + 'px) translate(-50%,-50%)';
-      dot.style.transform = t(x, y);
-      ch.style.transform = t(x, y);
-      cv.style.transform = t(x, y);
-      ring.style.transform = t(rx, ry);
-      requestAnimationFrame(step);
-    })();
-    document.addEventListener('mouseover', (e) => {
-      cur.classList.toggle('hot', !!(e.target.closest && e.target.closest('a,button')));
-    });
-  })();
-
-  /* ── 8. Хедер, меню, reveal, глитч, часы ────────────────── */
-  const hdr = $('#hdr');
-  window.addEventListener('scroll', () => {
-    if (hdr) hdr.classList.toggle('stuck', window.scrollY > 8);
-  }, { passive: true });
-
-  const burger = $('#burger'), msheet = $('#msheet');
-  if (burger && msheet) {
-    burger.addEventListener('click', () => {
-      const open = burger.getAttribute('aria-expanded') === 'true';
-      burger.setAttribute('aria-expanded', String(!open));
-      msheet.hidden = open;
-    });
-    $$('.msheet a').forEach((a) => a.addEventListener('click', () => {
-      burger.setAttribute('aria-expanded', 'false');
-      msheet.hidden = true;
-    }));
-  }
-
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((es) => es.forEach((e) => {
-      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-    }), { threshold: .12 });
-    $$('.rv').forEach((n) => io.observe(n));
-
-    const spy = new IntersectionObserver((es) => es.forEach((e) => {
-      if (e.isIntersecting) {
-        $$('.nav a').forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
-      }
-    }), { rootMargin: '-40% 0px -55% 0px' });
-    $$('main section[id]').forEach((s) => spy.observe(s));
-  } else {
-    $$('.rv').forEach((n) => n.classList.add('in'));
-  }
-
-  const logo = $('#logo');
-  if (logo) {
-    (function jerkLoop() {
-      setTimeout(() => {
-        logo.classList.add('jerk');
-        setTimeout(() => logo.classList.remove('jerk'), 340);
-        jerkLoop();
-      }, 1800 + Math.random() * 4200);
-    })();
-  }
-
-  const year = $('#year');
-  if (year) year.textContent = new Date().getFullYear();
-
-  const clock = $('#clock');
-  if (clock) {
-    const p = (n) => String(n).padStart(2, '0');
-    setInterval(() => {
-      const d = new Date();
-      clock.textContent = p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds());
-    }, 1000);
-  }
-})();
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
